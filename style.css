@@ -255,12 +255,16 @@ h2 {
 .product-add,
 .product-cart,
 .checkout {
-  width: 100%;
-  border: 0;
-  border-radius: 8px;
-  min-height: 48px;
-  font-size: 16px;
-  font-weight: 700;
+    width: 100%;
+    border: 0;
+    border-radius: 8px;
+    min-height: 48px;
+    font-size: 16px;
+    font-weight: 700;
+}
+
+#goToCheckoutBtn {
+    margin-top: 18px;
 }
 
 .product-add {
