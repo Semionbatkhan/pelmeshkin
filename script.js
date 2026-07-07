@@ -330,7 +330,7 @@ productDetails.addEventListener("click", (e) => {
     document.querySelector(".product-main-img").src = thumb.dataset.img;
   }
 
- if (e.target.closest("#productAddBtn")) {
+if (e.target.closest("#productAddBtn")) {
   addToCart(currentProductId);
 
   const addBtn = document.getElementById("productAddBtn");
