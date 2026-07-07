@@ -93,25 +93,38 @@ ${chatId}`;
     await sendMessage(chatId, customerMessage);
     await sendMessage(adminChatId, adminMessage);
 
-    const sheetsResponse = await fetch(sheetsWebhookUrl, {
-      method: "POST",
-      headers: {
-        "Content-Type": "text/plain;charset=utf-8"
-      },
-      body: JSON.stringify({
-        orderId,
-        date: new Date().toISOString(),
-        name: customer?.name || "",
-        phone: customer?.phone || "",
-        address: customer?.address || "",
-        comment: customer?.comment || "",
-        items: items || [],
-        total,
-        telegramId: chatId,
-        username: customer?.telegram?.username || "",
-        text
-      })
-    });
+if (sheetsWebhookUrl) {
+  const sheetResponse = await fetch(sheetsWebhookUrl, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({
+      orderId,
+      date: new Date().toISOString(),
+      name: customer?.name || "",
+      phone: customer?.phone || "",
+      address: customer?.address || "",
+      comment: customer?.comment || "",
+      items: items || [],
+      total,
+      telegramId: chatId,
+      username: customer?.telegram?.username || "",
+      text
+    })
+  });
+
+  console.log("Google status:", sheetResponse.status);
+
+  const sheetText = await sheetResponse.text();
+
+  console.log("Google response:", sheetText);
+}
+
+
+
+
+    
 
     if (!sheetsResponse.ok) {
       throw new Error("Google Sheets error: " + sheetsResponse.status);
