@@ -11,23 +11,28 @@
   <div class="app">
     <header class="header">
       <h1 id="pageTitle">Каталог</h1>
-      <button class="cart-fab" id="cartButton" aria-label="Корзина">
-        🛒 <span id="cartCount">0</span>
-      </button>
+      <button class="cart-fab" id="cartButton">🛒 <span id="cartCount">0</span></button>
     </header>
 
-    <nav class="tabs" id="categoryTabs"></nav>
+    <section id="catalogScreen">
+      <nav class="tabs" id="categoryTabs"></nav>
 
-    <div class="search-wrap">
-      <input id="searchInput" type="text" placeholder="Поиск..." />
-      <span>⌕</span>
-    </div>
+      <div class="search-wrap">
+        <input id="searchInput" type="text" placeholder="Поиск..." />
+        <span>⌕</span>
+      </div>
 
-    <main id="catalog" class="catalog"></main>
+      <main id="catalog" class="catalog"></main>
+    </section>
+
+    <section id="productScreen" class="screen hidden">
+      <button id="backFromProduct" class="back">‹ Назад</button>
+      <div id="productDetails"></div>
+    </section>
 
     <section id="cartScreen" class="cart-screen hidden">
       <div class="cart-head">
-        <button id="backToCatalog" class="back">‹ Back</button>
+        <button id="backToCatalog" class="back">‹ Назад</button>
         <h1>Корзина</h1>
       </div>
 
@@ -37,7 +42,34 @@
         <b>Итого:</b> <span id="cartTotal">0 ₽</span>
       </div>
 
-      <button id="checkoutBtn" class="checkout">Перейти к оформлению заказа</button>
+      <button id="goToCheckoutBtn" class="checkout">Перейти к оформлению</button>
+    </section>
+
+    <section id="checkoutScreen" class="cart-screen hidden">
+      <div class="cart-head">
+        <button id="backToCart" class="back">‹ Назад</button>
+        <h1>Оформление</h1>
+      </div>
+
+      <div class="checkout-form">
+        <label>Имя *</label>
+        <input id="customerName" type="text" placeholder="Ваше имя" />
+
+        <label>Телефон *</label>
+        <input id="customerPhone" type="tel" placeholder="+357..." />
+
+        <label>Адрес доставки *</label>
+        <textarea id="customerAddress" placeholder="Адрес доставки"></textarea>
+
+        <label>Комментарий *</label>
+        <textarea id="customerComment" placeholder="Комментарий к заказу"></textarea>
+      </div>
+
+      <div class="cart-total">
+        <b>Итого:</b> <span id="checkoutTotal">0 ₽</span>
+      </div>
+
+      <button id="checkoutBtn" class="checkout" disabled>Оформить заказ</button>
     </section>
   </div>
 
