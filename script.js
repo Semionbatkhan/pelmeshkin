@@ -57,6 +57,15 @@ function renderCatalog() {
     catalogEl.innerHTML = `<div class="empty">Ничего не найдено</div>`;
     return;
   }
+  }
+ 
+catalogEl.addEventListener("click", (e) => {
+    const btn = e.target.closest(".js-add");
+    if (!btn) return;
+
+    const id = Number(btn.dataset.id);
+    addToCart(id);
+});
 
   catalogEl.innerHTML = list.map(p => `
     <article class="card">
@@ -65,8 +74,8 @@ function renderCatalog() {
         <div class="card-title">${p.name}</div>
         <div class="price">Цена: ${money(p.price)}</div>
         <div class="add-row">
-          <button class="plus" onclick="addToCart(${p.id})">+</button>
-          <button class="add" onclick="addToCart(${p.id})">В корзину</button>
+    <button class="plus js-add" data-id="${p.id}">+</button>
+    <button class="add js-add" data-id="${p.id}">В корзину</button>
         </div>
       </div>
     </article>
