@@ -43,6 +43,13 @@ export default async function handler(req, res) {
       });
     }
 
+    if (!sheetsWebhookUrl) {
+      return res.status(500).json({
+        ok: false,
+        error: "SHEETS_WEBHOOK_URL не найден в Vercel"
+      });
+    }
+
     const orderId = makeOrderId();
 
     const customerMessage = `Спасибо! Мы получили ваш заказ №${orderId}.
@@ -86,26 +93,28 @@ ${chatId}`;
     await sendMessage(chatId, customerMessage);
     await sendMessage(adminChatId, adminMessage);
 
-    if (sheetsWebhookUrl) {
-      await fetch(sheetsWebhookUrl, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify({
-          orderId,
-          date: new Date().toISOString(),
-          name: customer?.name || "",
-          phone: customer?.phone || "",
-          address: customer?.address || "",
-          comment: customer?.comment || "",
-          items: items || [],
-          total,
-          telegramId: chatId,
-          username: customer?.telegram?.username || "",
-          text
-        })
-      });
+    const sheetsResponse = await fetch(sheetsWebhookUrl, {
+      method: "POST",
+      headers: {
+        "Content-Type": "text/plain;charset=utf-8"
+      },
+      body: JSON.stringify({
+        orderId,
+        date: new Date().toISOString(),
+        name: customer?.name || "",
+        phone: customer?.phone || "",
+        address: customer?.address || "",
+        comment: customer?.comment || "",
+        items: items || [],
+        total,
+        telegramId: chatId,
+        username: customer?.telegram?.username || "",
+        text
+      })
+    });
+
+    if (!sheetsResponse.ok) {
+      throw new Error("Google Sheets error: " + sheetsResponse.status);
     }
 
     return res.status(200).json({
