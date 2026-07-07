@@ -106,8 +106,9 @@ function openProduct(id) {
   if (!product) return;
 
   currentProductId = product.id;
+if (pageTitle) {
   pageTitle.textContent = product.name;
-
+}
   const gallery = product.gallery?.length ? product.gallery : [product.image];
 
   productDetails.innerHTML = `
@@ -218,8 +219,9 @@ function renderCart() {
 }
 
 function openCart() {
+if (pageTitle) {
   pageTitle.textContent = "Каталог";
-  renderCart();
+}  renderCart();
   showScreen(cartScreen);
 }
 
@@ -377,8 +379,9 @@ searchInput.addEventListener("input", (e) => {
 
 cartButton.addEventListener("click", openCart);
 backFromProduct.addEventListener("click", () => {
+if (pageTitle) {
   pageTitle.textContent = "Каталог";
-  showScreen(catalogScreen);
+}  showScreen(catalogScreen);
 });
 backToCatalog.addEventListener("click", () => showScreen(catalogScreen));
 backToCart.addEventListener("click", openCart);
