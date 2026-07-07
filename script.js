@@ -209,6 +209,10 @@ catalogEl.addEventListener("click", (e) => {
 
   const id = Number(btn.dataset.id);
   addToCart(id);
+
+  if (btn.classList.contains("add")) {
+    openCart();
+  }
 });
 
 cartItems.addEventListener("click", (e) => {
