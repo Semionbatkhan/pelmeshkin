@@ -126,9 +126,7 @@ if (sheetsWebhookUrl) {
 
     
 
-    if (!sheetsResponse.ok) {
-      throw new Error("Google Sheets error: " + sheetsResponse.status);
-    }
+  
 
     return res.status(200).json({
       ok: true,
