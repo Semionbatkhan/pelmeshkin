@@ -17,54 +17,57 @@ export default async function handler(req, res) {
     }
 
     const botToken = process.env.BOT_TOKEN;
+    const adminChatId = process.env.ADMIN_CHAT_ID;
 
-    if (!botToken) {
+    if (!botToken || !adminChatId) {
       return res.status(500).json({
         ok: false,
-        error: "Не настроен BOT_TOKEN"
+        error: "Не настроены BOT_TOKEN или ADMIN_CHAT_ID"
       });
     }
 
     const orderId = Date.now();
 
-    const message = `Спасибо! Мы получили ваш заказ №${orderId}.
+    const customerMessage = `Спасибо! Мы получили ваш заказ №${orderId}.
 
 ${text}
 
-👇 Нажмите кнопку ниже, чтобы подтвердить заказ.`;
+Если вы заметили неточности в заказе, просто напишите их сюда сообщением.`;
 
-    const telegramResponse = await fetch(
-      `https://api.telegram.org/bot${botToken}/sendMessage`,
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify({
-          chat_id: chatId,
-          text: message,
-          reply_markup: {
-            inline_keyboard: [
-              [
-                {
-                  text: "✅ Подтвердить заказ",
-                  callback_data: `confirm_${orderId}`
-                }
-              ]
-            ]
-          }
-        })
+    const adminMessage = `🔔 Новый заказ №${orderId}
+
+${text}
+
+Telegram:
+${customer?.telegram?.username ? "@" + customer.telegram.username : "без username"}
+
+Telegram ID:
+${chatId}`;
+
+    async function sendMessage(chat_id, message) {
+      const response = await fetch(
+        `https://api.telegram.org/bot${botToken}/sendMessage`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({
+            chat_id,
+            text: message
+          })
+        }
+      );
+
+      const result = await response.json();
+
+      if (!result.ok) {
+        throw new Error(result.description || "Telegram error");
       }
-    );
-
-    const result = await telegramResponse.json();
-
-    if (!result.ok) {
-      return res.status(500).json({
-        ok: false,
-        error: result.description || "Telegram error"
-      });
     }
+
+    await sendMessage(chatId, customerMessage);
+    await sendMessage(adminChatId, adminMessage);
 
     return res.status(200).json({
       ok: true,
