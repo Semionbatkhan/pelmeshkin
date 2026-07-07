@@ -186,12 +186,32 @@ function checkout() {
     total,
   });
 
- if (tg?.sendData) {
-    tg.sendData(text);
-    tg.close();
-} else {
-    alert(text);
-}
+fetch("/api/order", {
+  method: "POST",
+  headers: {
+    "Content-Type": "application/json"
+  },
+  body: JSON.stringify({
+    chatId: tg?.initDataUnsafe?.user?.id,
+    customer: tg?.initDataUnsafe?.user || null,
+    text,
+    items,
+    total
+  })
+})
+.then(res => res.json())
+.then(data => {
+  if (data.ok) {
+    if (tg?.close) {
+      tg.close();
+    }
+  } else {
+    alert(data.error || "Ошибка");
+  }
+})
+.catch(err => {
+  alert(err.message);
+});
 }
 
 tabsEl.addEventListener("click", (e) => {
