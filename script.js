@@ -327,9 +327,25 @@ productDetails.addEventListener("click", (e) => {
     document.querySelector(".product-main-img").src = thumb.dataset.img;
   }
 
-  if (e.target.closest("#productAddBtn")) {
-    addToCart(currentProductId);
+ if (e.target.closest("#productAddBtn")) {
+  addToCart(currentProductId);
+
+  const addBtn = document.getElementById("productAddBtn");
+  const productCartCount = document.getElementById("productCartCount");
+
+  if (productCartCount) {
+    productCartCount.textContent = Object.values(cart).reduce((s, q) => s + q, 0);
   }
+
+  addBtn.textContent = "✅ Добавлено";
+  setTimeout(() => {
+    addBtn.textContent = "➕ Добавить в корзину";
+  }, 900);
+}
+
+if (e.target.closest("#productTopCartBtn")) {
+  openCart();
+}
 
   if (e.target.closest("#productCartBtn")) {
     openCart();
