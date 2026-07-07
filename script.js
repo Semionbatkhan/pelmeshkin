@@ -25,25 +25,23 @@ function money(value) {
 }
 
 function categories() {
-  return ["Все", ...new Set(window.PRODUCTS.map(p => p.category))];
+  return ["Все", ...new Set(window.PRODUCTS.map((p) => p.category))];
 }
 
 function renderTabs() {
-  tabsEl.innerHTML = categories().map(cat => `
-    <button class="tab ${cat === activeCategory ? "active" : ""}" onclick="setCategory('${cat}')">
-      ${cat}
-    </button>
-  `).join("");
-}
-
-function setCategory(cat) {
-  activeCategory = cat;
-  renderTabs();
-  renderCatalog();
+  tabsEl.innerHTML = categories()
+    .map(
+      (cat) => `
+        <button class="tab ${cat === activeCategory ? "active" : ""}" data-category="${cat}">
+          ${cat}
+        </button>
+      `
+    )
+    .join("");
 }
 
 function filteredProducts() {
-  return window.PRODUCTS.filter(p => {
+  return window.PRODUCTS.filter((p) => {
     const byCategory = activeCategory === "Все" || p.category === activeCategory;
     const bySearch = p.name.toLowerCase().includes(search.toLowerCase());
     return byCategory && bySearch;
@@ -57,41 +55,44 @@ function renderCatalog() {
     catalogEl.innerHTML = `<div class="empty">Ничего не найдено</div>`;
     return;
   }
-  }
- 
-catalogEl.addEventListener("click", (e) => {
-    const btn = e.target.closest(".js-add");
-    if (!btn) return;
 
-    const id = Number(btn.dataset.id);
-    addToCart(id);
-});
-
-  catalogEl.innerHTML = list.map(p => `
-    <article class="card">
-      <img class="card-img" src="${p.image}" alt="${p.name}">
-      <div class="card-body">
-        <div class="card-title">${p.name}</div>
-        <div class="price">Цена: ${money(p.price)}</div>
-        <div class="add-row">
-    <button class="plus js-add" data-id="${p.id}">+</button>
-    <button class="add js-add" data-id="${p.id}">В корзину</button>
-        </div>
-      </div>
-    </article>
-  `).join("");
+  catalogEl.innerHTML = list
+    .map(
+      (p) => `
+        <article class="card">
+          <img class="card-img" src="${p.image}" alt="${p.name}">
+          <div class="card-body">
+            <div class="card-title">${p.name}</div>
+            <div class="price">Цена: ${money(p.price)}</div>
+            <div class="add-row">
+              <button class="plus js-add" data-id="${p.id}">+</button>
+              <button class="add js-add" data-id="${p.id}">В корзину</button>
+            </div>
+          </div>
+        </article>
+      `
+    )
+    .join("");
 }
 
 function addToCart(id) {
   cart[id] = (cart[id] || 0) + 1;
   updateCartCount();
-  if (tg?.HapticFeedback) tg.HapticFeedback.impactOccurred("light");
+
+  if (tg?.HapticFeedback) {
+    tg.HapticFeedback.impactOccurred("light");
+  }
 }
 
 function removeFromCart(id) {
   if (!cart[id]) return;
+
   cart[id] -= 1;
-  if (cart[id] <= 0) delete cart[id];
+
+  if (cart[id] <= 0) {
+    delete cart[id];
+  }
+
   renderCart();
   updateCartCount();
 }
@@ -104,7 +105,7 @@ function updateCartCount() {
 function cartList() {
   return Object.entries(cart)
     .map(([id, qty]) => {
-      const product = window.PRODUCTS.find(p => p.id === Number(id));
+      const product = window.PRODUCTS.find((p) => p.id === Number(id));
       return product ? { ...product, qty } : null;
     })
     .filter(Boolean);
@@ -119,22 +120,27 @@ function renderCart() {
     return;
   }
 
-  cartItems.innerHTML = items.map(item => `
-    <div class="cart-item">
-      <img src="${item.image}" alt="${item.name}">
-      <div>
-        <div class="cart-name">${item.name}</div>
-        <div class="cart-meta">${item.meta || ""}<br>Цена: ${money(item.price)}</div>
-      </div>
-      <div class="qty">
-        <button onclick="removeFromCart(${item.id})">−</button>
-        <span>${item.qty}</span>
-        <button onclick="addToCart(${item.id}); renderCart();">+</button>
-      </div>
-    </div>
-  `).join("");
+  cartItems.innerHTML = items
+    .map(
+      (item) => `
+        <div class="cart-item">
+          <img src="${item.image}" alt="${item.name}">
+          <div>
+            <div class="cart-name">${item.name}</div>
+            <div class="cart-meta">${item.meta || ""}<br>Цена: ${money(item.price)}</div>
+          </div>
+          <div class="qty">
+            <button class="js-minus" data-id="${item.id}">−</button>
+            <span>${item.qty}</span>
+            <button class="js-plus-cart" data-id="${item.id}">+</button>
+          </div>
+        </div>
+      `
+    )
+    .join("");
 
-  cartTotal.textContent = money(items.reduce((sum, item) => sum + item.price * item.qty, 0));
+  const total = items.reduce((sum, item) => sum + item.price * item.qty, 0);
+  cartTotal.textContent = money(total);
 }
 
 function openCart() {
@@ -158,19 +164,26 @@ function checkout() {
 
   const text =
     "Ваш заказ:\n\n" +
-    items.map(item => `• ${item.name} — ${item.qty} шт. × ${money(item.price)} = ${money(item.price * item.qty)}`).join("\n") +
+    items
+      .map(
+        (item) =>
+          `• ${item.name} — ${item.qty} шт. × ${money(item.price)} = ${money(
+            item.price * item.qty
+          )}`
+      )
+      .join("\n") +
     `\n\nИтого: ${money(total)}`;
 
   const payload = JSON.stringify({
     type: "order",
     text,
-    items: items.map(item => ({
+    items: items.map((item) => ({
       id: item.id,
       name: item.name,
       price: item.price,
-      qty: item.qty
+      qty: item.qty,
     })),
-    total
+    total,
   });
 
   if (tg?.sendData) {
@@ -180,6 +193,37 @@ function checkout() {
     alert(text);
   }
 }
+
+tabsEl.addEventListener("click", (e) => {
+  const btn = e.target.closest(".tab");
+  if (!btn) return;
+
+  activeCategory = btn.dataset.category;
+  renderTabs();
+  renderCatalog();
+});
+
+catalogEl.addEventListener("click", (e) => {
+  const btn = e.target.closest(".js-add");
+  if (!btn) return;
+
+  const id = Number(btn.dataset.id);
+  addToCart(id);
+});
+
+cartItems.addEventListener("click", (e) => {
+  const minus = e.target.closest(".js-minus");
+  const plus = e.target.closest(".js-plus-cart");
+
+  if (minus) {
+    removeFromCart(Number(minus.dataset.id));
+  }
+
+  if (plus) {
+    addToCart(Number(plus.dataset.id));
+    renderCart();
+  }
+});
 
 searchInput.addEventListener("input", (e) => {
   search = e.target.value;
