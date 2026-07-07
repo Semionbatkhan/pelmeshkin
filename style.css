@@ -441,3 +441,25 @@ h2 {
   height: 52px;
   font-size: 22px;
 }
+#productScreen.hidden,
+#cartScreen.hidden,
+#checkoutScreen.hidden {
+  display: none !important;
+  pointer-events: none !important;
+}
+
+#catalogScreen {
+  position: relative;
+  z-index: 1;
+}
+
+.catalog,
+.card,
+.js-product {
+  pointer-events: auto !important;
+}
+
+.screen,
+.cart-screen {
+  z-index: 50;
+}
