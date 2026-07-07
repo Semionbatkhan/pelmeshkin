@@ -135,6 +135,9 @@ function openProduct(id) {
       </div>
 
       <div class="product-actions">
+      <button class="product-page-cart" id="productTopCartBtn">
+  🛒 <span id="productCartCount">${Object.values(cart).reduce((s, q) => s + q, 0)}</span>
+</button>
         <button class="product-add" id="productAddBtn">➕ Добавить в корзину</button>
         <button class="product-cart" id="productCartBtn">🛒 Перейти в корзину</button>
       </div>
