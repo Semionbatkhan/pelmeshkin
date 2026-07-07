@@ -7,21 +7,51 @@ if (tg) {
 
 let activeCategory = "Все";
 let search = "";
-let cart = {};
+let currentProductId = null;
+let cart = JSON.parse(localStorage.getItem("pelmeshkin_cart") || "{}");
 
+const catalogScreen = document.getElementById("catalogScreen");
+const productScreen = document.getElementById("productScreen");
+const cartScreen = document.getElementById("cartScreen");
+const checkoutScreen = document.getElementById("checkoutScreen");
+
+const pageTitle = document.getElementById("pageTitle");
 const catalogEl = document.getElementById("catalog");
 const tabsEl = document.getElementById("categoryTabs");
 const searchInput = document.getElementById("searchInput");
+const productDetails = document.getElementById("productDetails");
+
 const cartButton = document.getElementById("cartButton");
-const cartScreen = document.getElementById("cartScreen");
-const backToCatalog = document.getElementById("backToCatalog");
-const cartItems = document.getElementById("cartItems");
 const cartCount = document.getElementById("cartCount");
+const cartItems = document.getElementById("cartItems");
 const cartTotal = document.getElementById("cartTotal");
+const checkoutTotal = document.getElementById("checkoutTotal");
+
+const backFromProduct = document.getElementById("backFromProduct");
+const backToCatalog = document.getElementById("backToCatalog");
+const backToCart = document.getElementById("backToCart");
+const goToCheckoutBtn = document.getElementById("goToCheckoutBtn");
 const checkoutBtn = document.getElementById("checkoutBtn");
+
+const customerName = document.getElementById("customerName");
+const customerPhone = document.getElementById("customerPhone");
+const customerAddress = document.getElementById("customerAddress");
+const customerComment = document.getElementById("customerComment");
 
 function money(value) {
   return `${value.toLocaleString("ru-RU")} ₽`;
+}
+
+function saveCart() {
+  localStorage.setItem("pelmeshkin_cart", JSON.stringify(cart));
+}
+
+function showScreen(screen) {
+  catalogScreen.classList.add("hidden");
+  productScreen.classList.add("hidden");
+  cartScreen.classList.add("hidden");
+  checkoutScreen.classList.add("hidden");
+  screen.classList.remove("hidden");
 }
 
 function categories() {
@@ -59,15 +89,11 @@ function renderCatalog() {
   catalogEl.innerHTML = list
     .map(
       (p) => `
-        <article class="card">
+        <article class="card js-product" data-id="${p.id}">
           <img class="card-img" src="${p.image}" alt="${p.name}">
           <div class="card-body">
             <div class="card-title">${p.name}</div>
             <div class="price">Цена: ${money(p.price)}</div>
-            <div class="add-row">
-              <button class="plus js-add" data-id="${p.id}">+</button>
-              <button class="add js-add" data-id="${p.id}">В корзину</button>
-            </div>
           </div>
         </article>
       `
@@ -75,8 +101,52 @@ function renderCatalog() {
     .join("");
 }
 
+function openProduct(id) {
+  const product = window.PRODUCTS.find((p) => p.id === Number(id));
+  if (!product) return;
+
+  currentProductId = product.id;
+  pageTitle.textContent = product.name;
+
+  const gallery = product.gallery?.length ? product.gallery : [product.image];
+
+  productDetails.innerHTML = `
+    <div class="product-page">
+      <img class="product-main-img" src="${product.image}" alt="${product.name}">
+
+      <div class="product-gallery">
+        ${gallery
+          .map(
+            (img) => `
+              <img class="product-thumb" src="${img}" alt="${product.name}" data-img="${img}">
+            `
+          )
+          .join("")}
+      </div>
+
+      <h2>${product.name}</h2>
+      <div class="product-price">${money(product.price)}</div>
+
+      <div class="product-info">
+        <p><b>Вес:</b> ${product.weight || "1 кг"}</p>
+        <p><b>Описание:</b> ${product.description || "Домашний продукт ручной работы."}</p>
+        <p><b>Состав:</b> ${product.ingredients || "Состав уточняется."}</p>
+        <p><b>Условия хранения:</b> ${product.storage || "Хранить в морозильной камере."}</p>
+      </div>
+
+      <div class="product-actions">
+        <button class="product-add" id="productAddBtn">➕ Добавить в корзину</button>
+        <button class="product-cart" id="productCartBtn">🛒 Перейти в корзину</button>
+      </div>
+    </div>
+  `;
+
+  showScreen(productScreen);
+}
+
 function addToCart(id) {
   cart[id] = (cart[id] || 0) + 1;
+  saveCart();
   updateCartCount();
 
   if (tg?.HapticFeedback) {
@@ -86,13 +156,9 @@ function addToCart(id) {
 
 function removeFromCart(id) {
   if (!cart[id]) return;
-
   cart[id] -= 1;
-
-  if (cart[id] <= 0) {
-    delete cart[id];
-  }
-
+  if (cart[id] <= 0) delete cart[id];
+  saveCart();
   renderCart();
   updateCartCount();
 }
@@ -111,12 +177,17 @@ function cartList() {
     .filter(Boolean);
 }
 
+function getTotal() {
+  return cartList().reduce((sum, item) => sum + item.price * item.qty, 0);
+}
+
 function renderCart() {
   const items = cartList();
 
   if (!items.length) {
     cartItems.innerHTML = `<div class="empty">Корзина пустая</div>`;
     cartTotal.textContent = money(0);
+    goToCheckoutBtn.disabled = true;
     return;
   }
 
@@ -127,7 +198,7 @@ function renderCart() {
           <img src="${item.image}" alt="${item.name}">
           <div>
             <div class="cart-name">${item.name}</div>
-            <div class="cart-meta">${item.meta || ""}<br>Цена: ${money(item.price)}</div>
+            <div class="cart-meta">${item.weight || ""}<br>Цена: ${money(item.price)}</div>
           </div>
           <div class="qty">
             <button class="js-minus" data-id="${item.id}">−</button>
@@ -139,17 +210,30 @@ function renderCart() {
     )
     .join("");
 
-  const total = items.reduce((sum, item) => sum + item.price * item.qty, 0);
-  cartTotal.textContent = money(total);
+  cartTotal.textContent = money(getTotal());
+  goToCheckoutBtn.disabled = false;
 }
 
 function openCart() {
+  pageTitle.textContent = "Каталог";
   renderCart();
-  cartScreen.classList.remove("hidden");
+  showScreen(cartScreen);
 }
 
-function closeCart() {
-  cartScreen.classList.add("hidden");
+function openCheckout() {
+  checkoutTotal.textContent = money(getTotal());
+  validateCheckoutForm();
+  showScreen(checkoutScreen);
+}
+
+function validateCheckoutForm() {
+  const isValid =
+    customerName.value.trim() &&
+    customerPhone.value.trim() &&
+    customerAddress.value.trim() &&
+    customerComment.value.trim();
+
+  checkoutBtn.disabled = !isValid;
 }
 
 function checkout() {
@@ -160,58 +244,65 @@ function checkout() {
     return;
   }
 
-  const total = items.reduce((sum, item) => sum + item.price * item.qty, 0);
+  validateCheckoutForm();
+
+  if (checkoutBtn.disabled) {
+    alert("Заполните все поля");
+    return;
+  }
+
+  const total = getTotal();
+
+  const customer = {
+    name: customerName.value.trim(),
+    phone: customerPhone.value.trim(),
+    address: customerAddress.value.trim(),
+    comment: customerComment.value.trim(),
+    telegram: tg?.initDataUnsafe?.user || null
+  };
 
   const text =
-    "Ваш заказ:\n\n" +
+    `Данные клиента:\n` +
+    `Имя: ${customer.name}\n` +
+    `Телефон: ${customer.phone}\n` +
+    `Адрес: ${customer.address}\n` +
+    `Комментарий: ${customer.comment}\n\n` +
+    `Заказ:\n\n` +
     items
       .map(
         (item) =>
-          `• ${item.name} — ${item.qty} шт. × ${money(item.price)} = ${money(
-            item.price * item.qty
-          )}`
+          `• ${item.name} — ${item.qty} шт. × ${money(item.price)} = ${money(item.price * item.qty)}`
       )
       .join("\n") +
     `\n\nИтого: ${money(total)}`;
 
-  const payload = JSON.stringify({
-    type: "order",
-    text,
-    items: items.map((item) => ({
-      id: item.id,
-      name: item.name,
-      price: item.price,
-      qty: item.qty,
-    })),
-    total,
-  });
-
-fetch("/api/order", {
-  method: "POST",
-  headers: {
-    "Content-Type": "application/json"
-  },
-  body: JSON.stringify({
-    chatId: tg?.initDataUnsafe?.user?.id,
-    customer: tg?.initDataUnsafe?.user || null,
-    text,
-    items,
-    total
+  fetch("/api/order", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({
+      chatId: tg?.initDataUnsafe?.user?.id,
+      customer,
+      text,
+      items,
+      total
+    })
   })
-})
-.then(res => res.json())
-.then(data => {
-  if (data.ok) {
-    if (tg?.close) {
-      tg.close();
-    }
-  } else {
-    alert(data.error || "Ошибка");
-  }
-})
-.catch(err => {
-  alert(err.message);
-});
+    .then((res) => res.json())
+    .then((data) => {
+      if (data.ok) {
+        cart = {};
+        saveCart();
+        updateCartCount();
+        if (tg?.close) tg.close();
+      } else {
+        alert(data.error || "Ошибка");
+      }
+    })
+    .catch((err) => {
+      alert(err.message);
+    });
 }
 
 tabsEl.addEventListener("click", (e) => {
@@ -224,13 +315,23 @@ tabsEl.addEventListener("click", (e) => {
 });
 
 catalogEl.addEventListener("click", (e) => {
-  const btn = e.target.closest(".js-add");
-  if (!btn) return;
+  const card = e.target.closest(".js-product");
+  if (!card) return;
 
-  const id = Number(btn.dataset.id);
-  addToCart(id);
+  openProduct(card.dataset.id);
+});
 
-  if (btn.classList.contains("add")) {
+productDetails.addEventListener("click", (e) => {
+  const thumb = e.target.closest(".product-thumb");
+  if (thumb) {
+    document.querySelector(".product-main-img").src = thumb.dataset.img;
+  }
+
+  if (e.target.closest("#productAddBtn")) {
+    addToCart(currentProductId);
+  }
+
+  if (e.target.closest("#productCartBtn")) {
     openCart();
   }
 });
@@ -239,10 +340,7 @@ cartItems.addEventListener("click", (e) => {
   const minus = e.target.closest(".js-minus");
   const plus = e.target.closest(".js-plus-cart");
 
-  if (minus) {
-    removeFromCart(Number(minus.dataset.id));
-  }
-
+  if (minus) removeFromCart(Number(minus.dataset.id));
   if (plus) {
     addToCart(Number(plus.dataset.id));
     renderCart();
@@ -254,8 +352,18 @@ searchInput.addEventListener("input", (e) => {
   renderCatalog();
 });
 
+[customerName, customerPhone, customerAddress, customerComment].forEach((field) => {
+  field.addEventListener("input", validateCheckoutForm);
+});
+
 cartButton.addEventListener("click", openCart);
-backToCatalog.addEventListener("click", closeCart);
+backFromProduct.addEventListener("click", () => {
+  pageTitle.textContent = "Каталог";
+  showScreen(catalogScreen);
+});
+backToCatalog.addEventListener("click", () => showScreen(catalogScreen));
+backToCart.addEventListener("click", openCart);
+goToCheckoutBtn.addEventListener("click", openCheckout);
 checkoutBtn.addEventListener("click", checkout);
 
 renderTabs();
