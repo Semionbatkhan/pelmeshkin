@@ -186,12 +186,12 @@ function checkout() {
     total,
   });
 
-  if (tg?.sendData) {
-    tg.sendData(payload);
+ if (tg?.sendData) {
+    tg.sendData(text);
     tg.close();
-  } else {
+} else {
     alert(text);
-  }
+}
 }
 
 tabsEl.addEventListener("click", (e) => {
