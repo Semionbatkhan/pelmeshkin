@@ -7,26 +7,31 @@ export default async function handler(req, res) {
   }
 
   try {
-    const { text } = req.body;
+    const { chatId, text, customer } = req.body;
 
-    if (!text) {
+    if (!chatId || !text) {
       return res.status(400).json({
         ok: false,
-        error: "Нет текста заказа"
+        error: "Нет chatId или текста заказа"
       });
     }
 
     const botToken = process.env.BOT_TOKEN;
-    const chatId = process.env.CHAT_ID;
 
-    if (!botToken || !chatId) {
+    if (!botToken) {
       return res.status(500).json({
         ok: false,
-        error: "Не настроены BOT_TOKEN или CHAT_ID"
+        error: "Не настроен BOT_TOKEN"
       });
     }
 
-    const message = `🛒 Новый заказ\n\n${text}`;
+    const orderId = Date.now();
+
+    const message = `Спасибо! Мы получили ваш заказ №${orderId}.
+
+${text}
+
+👇 Нажмите кнопку ниже, чтобы подтвердить заказ.`;
 
     const telegramResponse = await fetch(
       `https://api.telegram.org/bot${botToken}/sendMessage`,
@@ -43,13 +48,7 @@ export default async function handler(req, res) {
               [
                 {
                   text: "✅ Подтвердить заказ",
-                  callback_data: "confirm_order"
-                }
-              ],
-              [
-                {
-                  text: "❌ Отменить заказ",
-                  callback_data: "cancel_order"
+                  callback_data: `confirm_${orderId}`
                 }
               ]
             ]
@@ -69,7 +68,7 @@ export default async function handler(req, res) {
 
     return res.status(200).json({
       ok: true,
-      message: "Заказ отправлен в Telegram"
+      orderId
     });
   } catch (error) {
     return res.status(500).json({
