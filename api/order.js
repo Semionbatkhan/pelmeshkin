@@ -1,3 +1,19 @@
+function makeOrderId() {
+  const parts = new Intl.DateTimeFormat("ru-RU", {
+    timeZone: "Europe/Nicosia",
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: false
+  }).formatToParts(new Date());
+
+  const get = (type) => parts.find((p) => p.type === type)?.value || "";
+
+  return `${get("day")}${get("month")}${get("year")}${get("hour")}${get("minute")}`;
+}
+
 export default async function handler(req, res) {
   if (req.method !== "POST") {
     return res.status(200).json({
@@ -7,7 +23,7 @@ export default async function handler(req, res) {
   }
 
   try {
-    const { chatId, text, customer } = req.body;
+    const { chatId, text, customer, items, total } = req.body;
 
     if (!chatId || !text) {
       return res.status(400).json({
@@ -18,6 +34,7 @@ export default async function handler(req, res) {
 
     const botToken = process.env.BOT_TOKEN;
     const adminChatId = process.env.ADMIN_CHAT_ID;
+    const sheetsWebhookUrl = process.env.SHEETS_WEBHOOK_URL;
 
     if (!botToken || !adminChatId) {
       return res.status(500).json({
@@ -26,7 +43,7 @@ export default async function handler(req, res) {
       });
     }
 
-    const orderId = Date.now();
+    const orderId = makeOrderId();
 
     const customerMessage = `Спасибо! Мы получили ваш заказ №${orderId}.
 
@@ -68,6 +85,28 @@ ${chatId}`;
 
     await sendMessage(chatId, customerMessage);
     await sendMessage(adminChatId, adminMessage);
+
+    if (sheetsWebhookUrl) {
+      await fetch(sheetsWebhookUrl, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          orderId,
+          date: new Date().toISOString(),
+          name: customer?.name || "",
+          phone: customer?.phone || "",
+          address: customer?.address || "",
+          comment: customer?.comment || "",
+          items: items || [],
+          total,
+          telegramId: chatId,
+          username: customer?.telegram?.username || "",
+          text
+        })
+      });
+    }
 
     return res.status(200).json({
       ok: true,
