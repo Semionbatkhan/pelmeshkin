@@ -28,4 +28,18 @@ window.PRODUCTS = [
     ingredients: "Картофель, лук, тесто, соль, специи.",
     storage: "Хранить в морозильной камере при -18°C."
   }
+  {
+    id: 2,
+    name: "Вареники с картошкой, 1 кг",
+    price: 850,
+    category: "Вареники",
+    weight: "1 кг",
+    image: "https://images.unsplash.com/photo-1541014741259-de529411b96a?auto=format&fit=crop&w=600&q=80",
+    gallery: [
+      "https://images.unsplash.com/photo-1541014741259-de529411b96a?auto=format&fit=crop&w=600&q=80"
+    ],
+    description: "Вареники с нежной картофельной начинкой.",
+    ingredients: "Картофель, лук, тесто, соль, специи.",
+    storage: "Хранить в морозильной камере при -18°C."
+  }
 ];
